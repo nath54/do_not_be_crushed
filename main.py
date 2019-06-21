@@ -83,6 +83,7 @@ class Perso:
         self.vie_tot=5
         self.vie=self.vie_tot
         self.score=0
+        self.argent=0
     def anim(self):
         if time.time()-self.dan >= self.tpan:
             self.dan=time.time()
@@ -104,6 +105,8 @@ class Perso:
                 if not self.issauter:
                     self.pz+=self.vitz
                     if self.pz>lz2: self.pz=lz2
+                else:
+                    self.py-=10
             elif aa=="left":
                 if self.voie>1: self.voie-=1
             elif aa=="right":
@@ -150,14 +153,35 @@ class Obstacl():
                 if p.vie>0 and self.voie==p.voie and p.pz>=self.pz-self.tz and p.pz<=self.pz and pygame.Rect(0,self.py,self.tx,self.ty).colliderect(pygame.Rect(0,p.py,p.tx,p.ty)):
                     p.vie-=1
                     self.vie-=1
-        
-        
 
-def aff_jeu(persos,obs,fps,imgbg):
+class Piece:
+    def __init__(self):
+        self.voie=random.randint(1,3)
+        self.py=random.choice([0,0,0,0,ry(200)])
+        self.pz=random.randint(int(-lz2),0)
+        self.tx=rx(50)
+        self.ty=ry(50)
+        self.tz=rz(15)
+        self.img=pygame.transform.scale(pygame.image.load(dim+"piece.png"),[int(self.tx),int(self.ty)])
+        self.vit=rz(1)
+        self.vie=1
+        self.dbg=time.time()
+        self.tbg=0.01        
+    def update(self,persos):
+        if self.vie>0:
+            if time.time()-self.dbg >= self.tbg:
+                self.dbg=time.time()
+                self.pz+=self.vit
+            for p in persos:
+                if p.vie>0 and self.voie==p.voie and p.pz>=self.pz-self.tz and p.pz<=self.pz and pygame.Rect(0,self.py,self.tx,self.ty).colliderect(pygame.Rect(0,p.py,p.tx,p.ty)):
+                    p.argent+=1
+                    self.vie-=1
+
+def aff_jeu(persos,obs,fps,imgbg,pieces):
     fenetre.blit(imgbg,[0,0])
     nlts=[]
     lts=[]
-    for o in obs+persos:
+    for o in obs+persos+pieces:
         if o.vie>0: lts.append(o)
     while lts!=[]:
         lpz=lts[0]
@@ -171,21 +195,21 @@ def aff_jeu(persos,obs,fps,imgbg):
             ptx=p.tx*(rt1x+pd*(rt2x-rt1x))
             pty=p.ty*(rt1y+pd*(rt2y-rt1y))
             if p.voie==1:
-                ppx=(pv1_1[0]+pd*(pv1_2[0]-pv1_1[0]))-ptx/2
-                ppy=(pv1_1[1]+pd*(pv1_2[1]-pv1_1[1])-p.py)-pty/2.0
+                ppx=(pv1_1[0]+pd*(pv1_2[0]-pv1_1[0]))
+                ppy=(pv1_1[1]+pd*(pv1_2[1]-pv1_1[1]))
             elif p.voie==2:
-                ppx=(pv2_1[0]+pd*(pv2_2[0]-pv2_1[0]))-ptx/2
-                ppy=(pv2_1[1]+pd*(pv2_2[1]-pv2_1[1])-p.py)-pty/2.0
+                ppx=(pv2_1[0]+pd*(pv2_2[0]-pv2_1[0]))
+                ppy=(pv2_1[1]+pd*(pv2_2[1]-pv2_1[1]))
             else:
-                ppx=(pv3_1[0]+pd*(pv3_2[0]-pv3_1[0]))-ptx/2
-                ppy=(pv3_1[1]+pd*(pv3_2[1]-pv3_1[1])-p.py)-pty/2.0
-            fenetre.blit(pygame.transform.scale(p.img,[int(ptx),int(pty)]),[int(ppx),int(ppy)])
+                ppx=(pv3_1[0]+pd*(pv3_2[0]-pv3_1[0]))
+                ppy=(pv3_1[1]+pd*(pv3_2[1]-pv3_1[1]))
+            fenetre.blit(pygame.transform.scale(p.img,[int(ptx),int(pty)]),[int(ppx-ptx/2.),int(ppy-p.py-pty/2.)])
     yy=25
     for p in persos:
         fenetre.blit(font.render(p.nom,20,(0,0,0)),[rx(5),ry(yy)])
-        pygame.draw.rect(fenetre,(250-(p.vie/p.vie_tot*200),0,0),(rx(100),ry(yy),rx(p.vie/p.vie_tot*100),ry(25)),0)
+        pygame.draw.rect(fenetre,(50+(p.vie/p.vie_tot*200),0,0),(rx(100),ry(yy),rx(p.vie/p.vie_tot*100),ry(25)),0)
         pygame.draw.rect(fenetre,(0,0,0),(rx(100),ry(yy),rx(100),ry(25)),2)
-        fenetre.blit(font.render(str(p.score),20,(0,0,0)),[rx(205),ry(yy)])
+        fenetre.blit(font.render(str(p.score)+" or : "+str(p.argent),20,(0,0,0)),[rx(205),ry(yy)])
         yy+=45
     fenetre.blit(font1.render("fps : "+str(fps),20,(255,255,255)),[rx(5),ry(5)])
     pygame.display.update()
@@ -216,11 +240,13 @@ def jeu():
     maxob=20
     persos=[]
     persos.append( Perso(1.,[K_UP,K_DOWN,K_LEFT,K_RIGHT,K_END],0,"player1") )
+    pieces=[]
+    nbpieces=5
     fps=0
     encour=True
     while encour and not perdu:
         t1=time.time()
-        aff_jeu(persos,obs,fps,imgbg)
+        aff_jeu(persos,obs,fps,imgbg,pieces)
         if not pause:
             #persos
             nbenv=0
@@ -242,9 +268,15 @@ def jeu():
             for o in obs:
                 if o.pz>=lz2 or o.vie<=0:
                     if o in obs: del(obs[obs.index(o)])
+                else: o.update(persos)
             while len(obs)<nbobs: obs.append( Obstacl(random.choice(obstacles)) )
-            for o in obs:
-                o.update(persos)
+            #pieces
+            for p in pieces:
+                if p.pz>=lz2 or p.vie<=0:
+                    if p in pieces: del(pieces[pieces.index(p)])
+                else: p.update(persos)
+            while len(pieces)<nbpieces: pieces.append( Piece() )
+            
             verif_key(persos)
         for event in pygame.event.get():
             if event.type==QUIT: exit()
@@ -260,7 +292,7 @@ def jeu():
     fenetre.blit(font.render("Crushed",20,(255,50,50)),[rx(200),ry(50)])
     yy=100
     for p in persos:
-        fenetre.blit(font.render("-"+p.nom+" : "+str(p.score),20,(255,255,255)),[rx(150),ry(yy)])
+        fenetre.blit(font.render("-"+p.nom+" : "+str(p.score)+" or : "+str(p.argent),20,(255,255,255)),[rx(150),ry(yy)])
         yy+=50
     fenetre.blit(font.render("press space to continue",20,(255,255,255)),[rx(100),ry(500)])
     pygame.display.update()
