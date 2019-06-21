@@ -21,7 +21,7 @@ dim="images/"
 
 panims=[[["p1-1.png","p1-2.png","p1-3.png","p1-4.png","p1-5.png","p1-6.png","p1-7.png","p1-8.png","p1-9.png","p1-10.png","p1-11.png","p1-12.png","p1-13.png","p1-14.png","p1-15.png"],["p1-1.png","p1-2.png","p1-3.png","p1-4.png","p1-5.png","p1-6.png","p1-7.png","p1-8.png","p1-9.png","p1-10.png","p1-11.png","p1-12.png","p1-13.png","p1-14.png","p1-15.png"]]]
 
-obstacles=[["car1","v1.png",120,120,20],["car2","v2.png",120,120,20],["car3","v3.png",120,120,20],["police car","v4.png",120,120,20],["bus","v5.png",140,140,40]]
+obstacles=[["car1","v1.png",120,120,20,0],["car2","v2.png",120,120,20,0],["car3","v3.png",120,120,20,0],["police car","v4.png",120,120,20,0],["bus","v5.png",140,140,40,0],["avion","v6.png",91,17,40,220]]
 
 
 
@@ -140,8 +140,8 @@ class Obstacl():
         self.img=pygame.transform.scale(pygame.image.load(dim+tp[1]),[self.tx,self.ty])
         self.voie=random.randint(1,3)
         self.pz=random.randint(int(-lz2),0)
-        self.py=0.
-        self.vit=1
+        self.py=tp[5]
+        self.vit=random.randint(1,30)/10.
         self.dbg=time.time()
         self.tbg=0.01
     def update(self,persos):
