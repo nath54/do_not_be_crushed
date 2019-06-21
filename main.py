@@ -55,7 +55,7 @@ class Perso:
         self.ty=ry(150.)
         self.tz=rz(5.)
         self.voie=random.randint(1,3)
-        self.vitsaut=ry(50.)
+        self.vitsaut=ry(200.)
         self.vitz=rz(20.)
         self.imgs=[]
         self.imgs_s=[]
@@ -66,11 +66,11 @@ class Perso:
         self.an=0
         self.img=self.imgs[self.an]
         self.dan=time.time()
-        self.tpan=0.08
+        self.tpan=0.03
         self.dbg=time.time()
         self.tbg=0.1
         self.nbs=0
-        self.nbts=2
+        self.nbts=1
         self.dupd=time.time()
         self.tupd=0.01
         self.issauter=False
@@ -82,6 +82,7 @@ class Perso:
         self.bot=False
         self.vie_tot=5
         self.vie=self.vie_tot
+        self.score=0
     def anim(self):
         if time.time()-self.dan >= self.tpan:
             self.dan=time.time()
@@ -96,11 +97,13 @@ class Perso:
         if time.time()-self.dbg>=self.tbg:
             self.dbg=time.time()
             if aa=="up":
-                self.pz-=self.vitz
-                if self.pz<lz1: self.pz=lz1
+                if not self.issauter:
+                    self.pz-=self.vitz
+                    if self.pz<lz1: self.pz=lz1
             elif aa=="down":
-                self.pz+=self.vitz
-                if self.pz>lz2: self.pz=lz2
+                if not self.issauter:
+                    self.pz+=self.vitz
+                    if self.pz>lz2: self.pz=lz2
             elif aa=="left":
                 if self.voie>1: self.voie-=1
             elif aa=="right":
@@ -117,10 +120,12 @@ class Perso:
                     self.issauter=True
                     self.an=0
     def update(self):
-        if time.time()-self.dupd >= self.tupd:
-            self.dupd=time.time()
-            if self.py>=0: self.py=self.py-1
-            if self.issauter and self.py==0: self.issauter,self.nbs=False,0
+        if self.vie>0:
+            if time.time()-self.dupd >= self.tupd:
+                self.dupd=time.time()
+                if self.py>=0: self.py=self.py-0.75
+                if self.issauter and self.py<=1: self.issauter,self.nbs,self.py=False,0,0
+                self.score+=1
 
 class Obstacl():
     def __init__(self,tp):
@@ -131,7 +136,7 @@ class Obstacl():
         self.tz=20.
         self.img=pygame.transform.scale(pygame.image.load(dim+tp[1]),[self.tx,self.ty])
         self.voie=random.randint(1,3)
-        self.pz=random.randint(-lz2,0)
+        self.pz=random.randint(int(-lz2),0)
         self.py=0.
         self.vit=1
         self.dbg=time.time()
@@ -142,7 +147,7 @@ class Obstacl():
                 self.dbg=time.time()
                 self.pz+=self.vit
             for p in persos:
-                if p.vie>0 and self.voie==p.voie and p.pz>=self.pz-self.tz and p.pz<=self.pz:
+                if p.vie>0 and self.voie==p.voie and p.pz>=self.pz-self.tz and p.pz<=self.pz and pygame.Rect(0,self.py,self.tx,self.ty).colliderect(pygame.Rect(0,p.py,p.tx,p.ty)):
                     p.vie-=1
                     self.vie-=1
         
@@ -180,6 +185,7 @@ def aff_jeu(persos,obs,fps,imgbg):
         fenetre.blit(font.render(p.nom,20,(0,0,0)),[rx(5),ry(yy)])
         pygame.draw.rect(fenetre,(250-(p.vie/p.vie_tot*200),0,0),(rx(100),ry(yy),rx(p.vie/p.vie_tot*100),ry(25)),0)
         pygame.draw.rect(fenetre,(0,0,0),(rx(100),ry(yy),rx(100),ry(25)),2)
+        fenetre.blit(font.render(str(p.score),20,(0,0,0)),[rx(205),ry(yy)])
         yy+=45
     fenetre.blit(font1.render("fps : "+str(fps),20,(255,255,255)),[rx(5),ry(5)])
     pygame.display.update()
@@ -204,7 +210,10 @@ def jeu():
     danbg=time.time()
     tanbg=0.1
     obs=[]
-    nbobs=3
+    nbobs=1
+    daugob=time.time()
+    taugob=5
+    maxob=20
     persos=[]
     persos.append( Perso(1.,[K_UP,K_DOWN,K_LEFT,K_RIGHT,K_END],0,"player1") )
     fps=0
@@ -214,10 +223,12 @@ def jeu():
         aff_jeu(persos,obs,fps,imgbg)
         if not pause:
             #persos
+            nbenv=0
             for p in persos:
                 p.anim()
                 p.update()
-                if p.vie<=0: perdu=True
+                if p.vie>0: nbenv+=2
+            if nbenv==0: perdu=True
             #bg
             if time.time()-danbg>=tanbg:
                 danbg=time.time()
@@ -225,6 +236,9 @@ def jeu():
                 if anbg>=len(animbg): anbg=0
                 imgbg=animbg[anbg]
             #obstacles
+            if time.time()-daugob>=taugob:
+                daugob=time.time()
+                if nbobs<maxob: nbobs+=1
             for o in obs:
                 if o.pz>=lz2 or o.vie<=0:
                     if o in obs: del(obs[obs.index(o)])
@@ -241,6 +255,20 @@ def jeu():
         tt=(t2-t1)
         if tt!=0:
             fps=int(1./tt)
+    encour2=True
+    fenetre.fill((0,0,0))
+    fenetre.blit(font.render("Crushed",20,(255,50,50)),[rx(200),ry(50)])
+    yy=100
+    for p in persos:
+        fenetre.blit(font.render("-"+p.nom+" : "+str(p.score),20,(255,255,255)),[rx(150),ry(yy)])
+        yy+=50
+    fenetre.blit(font.render("press space to continue",20,(255,255,255)),[rx(100),ry(500)])
+    pygame.display.update()
+    while encour2:
+        for event in pygame.event.get():
+            if event.type==QUIT: exit()
+            elif event.type==KEYDOWN:
+                if event.key in [K_ESCAPE,K_SPACE]: encour2=False
 
 
 
