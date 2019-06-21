@@ -141,7 +141,7 @@ class Obstacl():
         self.voie=random.randint(1,3)
         self.pz=random.randint(int(-lz2),0)
         self.py=tp[5]
-        self.vit=random.randint(1,30)/10.
+        self.vit=random.randint(5,30)/10.
         self.dbg=time.time()
         self.tbg=0.01
     def update(self,persos):
@@ -240,6 +240,7 @@ def jeu():
     maxob=20
     persos=[]
     persos.append( Perso(1.,[K_UP,K_DOWN,K_LEFT,K_RIGHT,K_END],0,"player1") )
+    #persos.append( Perso(1.,[K_e,K_d,K_s,K_f,K_c],0,"player2") )
     pieces=[]
     nbpieces=5
     fps=0
