@@ -21,7 +21,7 @@ dim="images/"
 
 panims=[[["p1-1.png","p1-2.png","p1-3.png","p1-4.png","p1-5.png","p1-6.png","p1-7.png","p1-8.png","p1-9.png","p1-10.png","p1-11.png","p1-12.png","p1-13.png","p1-14.png","p1-15.png"],["p1-1.png","p1-2.png","p1-3.png","p1-4.png","p1-5.png","p1-6.png","p1-7.png","p1-8.png","p1-9.png","p1-10.png","p1-11.png","p1-12.png","p1-13.png","p1-14.png","p1-15.png"]]]
 
-obstacles=[["ford","v1.png",100,120]]
+obstacles=[["car1","v1.png",120,120,20],["car2","v2.png",120,120,20],["car3","v3.png",120,120,20],["police car","v4.png",120,120,20],["bus","v5.png",140,140,40]]
 
 
 
@@ -133,7 +133,7 @@ class Obstacl():
         self.nom=tp[0]
         self.tx=tp[2]
         self.ty=tp[3]
-        self.tz=20.
+        self.tz=tp[4]
         self.img=pygame.transform.scale(pygame.image.load(dim+tp[1]),[self.tx,self.ty])
         self.voie=random.randint(1,3)
         self.pz=random.randint(int(-lz2),0)
